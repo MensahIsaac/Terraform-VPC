@@ -1,19 +1,21 @@
 #  Prod-project-VPC
 resource "aws_vpc" "Prod-project-VPC" {
-  cidr_block       = "10.0.0.0/16"
-  instance_tenancy = "default"
+  cidr_block           = var.VPC_cidr
+  instance_tenancy     = var.VPC_tenancy
+  enable_dns_hostnames = var.dns-toggle
 
   tags = {
-    Name = "Prod-project-VPC"
+    Name = var.vpc_tag
   }
 }
 #  Prod-project-pub-sub-1
 resource "aws_subnet" "Prod-project-pub-sub-1" {
-  vpc_id     = aws_vpc.Prod-project-VPC.id
-  cidr_block = "10.0.1.0/24"
+  vpc_id            = aws_vpc.Prod-project-VPC.id
+  cidr_block        = var.Prod_pub_sub_1_cidr
+  availability_zone = var.AZ-1
 
   tags = {
-    Name = "Prod-project-pub-sub-1"
+    Name = var.Pub-1-tag
   }
 }
 
@@ -21,53 +23,54 @@ resource "aws_subnet" "Prod-project-pub-sub-1" {
 
 #  Prod-project-pub-sub-2
 resource "aws_subnet" "Prod-project-pub-sub-2" {
-  vpc_id     = aws_vpc.Prod-project-VPC.id
-  cidr_block = "10.0.2.0/24"
-
+  vpc_id            = aws_vpc.Prod-project-VPC.id
+  cidr_block        = var.Prod_pub_sub_2_cidr
+  availability_zone = var.AZ-2
   tags = {
-    Name = "Prod-project-pub-sub-2"
+    Name = var.Pub-2-tag
   }
 }
 
 #  Prod-project-priv-sub-1
 resource "aws_subnet" "Prod-project-priv-sub-1" {
-  vpc_id     = aws_vpc.Prod-project-VPC.id
-  cidr_block = "10.0.3.0/24"
-
+  vpc_id            = aws_vpc.Prod-project-VPC.id
+  cidr_block        = var.Prod_priv_sub_1_cidr
+  availability_zone = var.AZ-3
   tags = {
-    Name = "Prod-project-priv-sub-1"
+    Name = var.Priv-1-tag
   }
 }
 
 #  Prod-project-priv-sub-2
 resource "aws_subnet" "Prod-project-priv-sub-2" {
-  vpc_id     = aws_vpc.Prod-project-VPC.id
-  cidr_block = "10.0.4.0/24"
+  vpc_id            = aws_vpc.Prod-project-VPC.id
+  cidr_block        = var.Prod_priv_sub_2_cidr
+  availability_zone = var.AZ-4
 
   tags = {
-    Name = "Prod-project-priv-sub-2"
+    Name = var.Priv-2-tag
   }
 }
 
 
 #  Prod-project-pub-route-table
-resource "aws_route_table" "Prod-project-pub-route-table"  {                       
+resource "aws_route_table" "Prod-project-pub-route-table" {
   vpc_id = aws_vpc.Prod-project-VPC.id
 
-  tags  = {
-   Name = "Prod-project-pub-route-table"
+  tags = {
+    Name = var.Pub-route-table-tag
   }
-} 
+}
 
 
 #  Prod-project-priv-route-table
-resource "aws_route_table" "Prod-project-priv-route-table"  {                       
+resource "aws_route_table" "Prod-project-priv-route-table" {
   vpc_id = aws_vpc.Prod-project-VPC.id
 
-  tags  = {
-   Name = "Prod-project-priv-route-table"
+  tags = {
+    Name = var.Priv-route-table-tag
   }
-} 
+}
 
 #  Prod-project-pub-sub-association
 resource "aws_route_table_association" "Prod-project-pub-sub-association-1" {
@@ -99,21 +102,21 @@ resource "aws_internet_gateway" "Prod-project-IGW" {
   vpc_id = aws_vpc.Prod-project-VPC.id
 
   tags = {
-    Name ="Prod-project-VPC"
+    Name = var.IGW
   }
 }
 
 #  Prod-project-IGW-route
 resource "aws_route" "Prod-project-pub-route-table" {
-  route_table_id            = aws_route_table.Prod-project-pub-route-table.id
-  destination_cidr_block    = "0.0.0.0/0" 
-  gateway_id                = aws_internet_gateway.Prod-project-IGW.id
+  route_table_id         = aws_route_table.Prod-project-pub-route-table.id
+  destination_cidr_block = var.IGW-cidr
+  gateway_id             = aws_internet_gateway.Prod-project-IGW.id
 }
 
 
 #  Prod-project-elastic-IP-Address
 resource "aws_eip" "Prod-project-VPC-IP" {
-  
+
 }
 
 
@@ -123,15 +126,15 @@ resource "aws_nat_gateway" "Prod-project-Nat-gateway" {
   subnet_id     = aws_subnet.Prod-project-pub-sub-1.id
 
   tags = {
-    Name = "Prod-project-Nat-gateway"
+    Name = var.NAT
   }
 }
 
 #  Prod-project-Nat-gateway-association
 resource "aws_route" "Prod-project-Nat-gateway" {
-  gateway_id     = aws_nat_gateway.Prod-project-Nat-gateway.id
-  route_table_id = aws_route_table.Prod-project-priv-route-table.id
-  destination_cidr_block  ="0.0.0.0/0" 
+  gateway_id             = aws_nat_gateway.Prod-project-Nat-gateway.id
+  route_table_id         = aws_route_table.Prod-project-priv-route-table.id
+  destination_cidr_block = var.Nat-cidr
 
 }
 
